@@ -1,8 +1,22 @@
 # frozen_string_literal: true
 
-require_relative "active_record_proxy_adapters/version"
+require "active_record"
+require "active_record_proxy_adapters/version"
+require "active_record_proxy_adapters/configuration"
 
+# The gem namespace.
 module ActiveRecordProxyAdapters
   class Error < StandardError; end
-  # Your code goes here...
+
+  module_function
+
+  def configure
+    yield(config)
+  end
+
+  def config
+    @config ||= Configuration.new
+  end
 end
+
+require_relative "active_record_proxy_adapters/railtie" if defined?(Rails::Railtie)
