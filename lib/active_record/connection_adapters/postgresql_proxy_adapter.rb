@@ -2,8 +2,9 @@
 
 require "active_record/tasks/postgresql_proxy_database_tasks"
 require "active_record/connection_adapters/postgresql_adapter"
-require "active_record_proxy_adapters/postgresql_proxy"
+require "active_record_proxy_adapters/active_record_context"
 require "active_record_proxy_adapters/hijackable"
+require "active_record_proxy_adapters/postgresql_proxy"
 
 module ActiveRecord
   module ConnectionAdapters
@@ -14,7 +15,11 @@ module ActiveRecord
 
       ADAPTER_NAME = "PostgreSQLProxy"
 
-      delegate_to_proxy :execute, :exec_query, :exec_no_cache, :exec_cache
+      delegate_to_proxy :execute, :exec_query
+
+      unless ActiveRecordProxyAdapters::ActiveRecordContext.active_record_v8_0_or_greater?
+        delegate_to_proxy :exec_no_cache, :exec_cache
+      end
 
       def initialize(...)
         @proxy = ActiveRecordProxyAdapters::PostgreSQLProxy.new(self)
@@ -29,7 +34,7 @@ module ActiveRecord
   end
 end
 
-if ActiveRecordProxyAdapters::ActiveRecordContext.active_record_v7_2?
+if ActiveRecordProxyAdapters::ActiveRecordContext.active_record_v7_2_or_greater?
   ActiveRecord::ConnectionAdapters.register(
     "postgresql_proxy",
     "ActiveRecord::ConnectionAdapters::PostgreSQLProxyAdapter",
