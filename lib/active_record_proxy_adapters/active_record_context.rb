@@ -28,17 +28,21 @@ module ActiveRecordProxyAdapters
 
     def connection_handling_context
       # This config option has been removed in Rails 7.1+
-      return NullConnectionHandlingContext.new if active_record_v7_1? || active_record_v7_2?
+      return NullConnectionHandlingContext.new if active_record_v7_1_or_greater?
 
       ActiveRecord
     end
 
-    def active_record_v7_1?
-      active_record_version >= Gem::Version.new("7.1") && active_record_version < Gem::Version.new("7.2")
+    def active_record_v7_1_or_greater?
+      active_record_version >= Gem::Version.new("7.1")
     end
 
-    def active_record_v7_2?
-      active_record_version >= Gem::Version.new("7.2") && active_record_version < Gem::Version.new("8.0")
+    def active_record_v7_2_or_greater?
+      active_record_version >= Gem::Version.new("7.2")
+    end
+
+    def active_record_v8_0_or_greater?
+      active_record_version >= Gem::Version.new("8.0")
     end
   end
 end

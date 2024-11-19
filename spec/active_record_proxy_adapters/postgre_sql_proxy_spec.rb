@@ -164,31 +164,33 @@ RSpec.describe ActiveRecordProxyAdapters::PostgreSQLProxy do
     end
   end
 
-  describe "#exec_no_cache" do
-    it_behaves_like "a_proxied_method", :exec_no_cache do
-      subject(:run_test) do
-        if ActiveRecord.version < Gem::Version.new("7.1")
-          proxy.exec_no_cache(sql, "SQL", [])
-        else
-          proxy.exec_no_cache(sql, "SQL", [], async: false, allow_retry: false, materialize_transactions: false)
+  unless TestHelper.active_record_context.active_record_v8_0_or_greater?
+    describe "#exec_no_cache" do
+      it_behaves_like "a_proxied_method", :exec_no_cache do
+        subject(:run_test) do
+          if ActiveRecord.version < Gem::Version.new("7.1")
+            proxy.exec_no_cache(sql, "SQL", [])
+          else
+            proxy.exec_no_cache(sql, "SQL", [], async: false, allow_retry: false, materialize_transactions: false)
+          end
         end
-      end
 
-      let(:read_only_error_class) { ActiveRecord::StatementInvalid }
+        let(:read_only_error_class) { ActiveRecord::StatementInvalid }
+      end
     end
-  end
 
-  describe "#exec_cache" do
-    it_behaves_like "a_proxied_method", :exec_cache do
-      subject(:run_test) do
-        if ActiveRecord.version < Gem::Version.new("7.1")
-          proxy.exec_cache(sql, "SQL", [])
-        else
-          proxy.exec_cache(sql, "SQL", [], async: false, allow_retry: false, materialize_transactions: false)
+    describe "#exec_cache" do
+      it_behaves_like "a_proxied_method", :exec_cache do
+        subject(:run_test) do
+          if ActiveRecord.version < Gem::Version.new("7.1")
+            proxy.exec_cache(sql, "SQL", [])
+          else
+            proxy.exec_cache(sql, "SQL", [], async: false, allow_retry: false, materialize_transactions: false)
+          end
         end
-      end
 
-      let(:read_only_error_class) { ActiveRecord::StatementInvalid }
+        let(:read_only_error_class) { ActiveRecord::StatementInvalid }
+      end
     end
   end
 end

@@ -29,7 +29,10 @@ module ActiveRecordProxyAdapters
 
     # Defines which methods should be hijacked from the original adapter and use the proxy
     # @param method_names [Array<Symbol>] the list of method names from the adapter
-    def self.hijack_method(*method_names)
+    def self.hijack_method(*method_names) # rubocop:disable Metrics/MethodLength
+      @hijacked_methods ||= Set.new
+      @hijacked_methods += Set.new(method_names)
+
       method_names.each do |method_name|
         define_method(method_name) do |*args, **kwargs, &block|
           proxy_bypass_method = "#{method_name}#{UNPROXIED_METHOD_SUFFIX}"
@@ -42,6 +45,10 @@ module ActiveRecordProxyAdapters
           end
         end
       end
+    end
+
+    def self.hijacked_methods
+      @hijacked_methods.to_a
     end
 
     # @param primary_connection [ActiveRecord::ConnectionAdatpers::AbstractAdapter]
