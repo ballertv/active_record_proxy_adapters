@@ -14,7 +14,3 @@ Style/StringLiteralsInInterpolation:
 RSpec/NestedGroups:
   Enabled: true
   Max: 5
-
-# TODO: Enable MFA once we open source the gem
-Gemspec/RequireMFA:
-  Enabled: false 
