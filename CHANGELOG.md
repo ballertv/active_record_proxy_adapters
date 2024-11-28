@@ -1,3 +1,7 @@
+## [0.1.1] - 2024-11-27
+
+- Enable RubyGems MFA
+
 ## [0.1.0] - 2024-11-19
 
 - Add PostgreSQLProxyAdapter
