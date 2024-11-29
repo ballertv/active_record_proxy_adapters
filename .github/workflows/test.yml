@@ -71,6 +71,25 @@ jobs:
     - name: Push replica Docker image
       run: docker push ${{ needs.export_variables.outputs.replica_image }}
 
+  rubocop:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1.6
+
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle install
+      - name: Run RuboCop
+        run: bundle exec rubocop
+
   rspec:
     needs: [export_variables, prebuild_primary, prebuild_replica]
     runs-on: ubuntu-latest
@@ -133,7 +152,7 @@ jobs:
         env:
           RAILS_VERSION: ${{ matrix.rails }}
         run: |
-          gem install bundler -v 2.5.13
+          gem install bundler
           bundle install
 
       - name: Run RSpec tests
