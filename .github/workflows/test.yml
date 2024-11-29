@@ -96,8 +96,19 @@ jobs:
 
     strategy:
       matrix:
-        ruby: [3.2.5, 3.3.5]
-        rails: ['~> 7.0.0', '~> 7.1.0', '~> 8.0.0']
+        ruby:
+          - 3.2.5
+          - 3.3.5
+        rails:
+          - '~> 7.0.0'
+          - '~> 7.1.0'
+          - '~> 8.0.0'
+        include:
+          - ruby: 3.1.6
+            rails: '~> 7.0.0'
+          - ruby: 3.1.6
+            rails: '~> 7.1.0'
+            
     name: Ruby ${{ matrix.ruby }} / ActiveRecord ${{ matrix.rails }}
     services:
       postgres_primary:
