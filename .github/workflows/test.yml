@@ -135,7 +135,7 @@ jobs:
           PG_REPLICA_HOST: localhost
           PG_REPLICA_PORT: 5433
 
-        run: bundle exec rspec --format progress
+        run: RUBY_VERSION="${{ matrix.ruby }}" RAILS_VERSION="${{ matrix.rails }}"  bundle exec rspec --format progress
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
