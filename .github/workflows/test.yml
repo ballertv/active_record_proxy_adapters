@@ -100,15 +100,15 @@ jobs:
           - 3.2.5
           - 3.3.5
         rails:
-          - '~> 7.0.0'
-          - '~> 7.1.0'
-          - '~> 8.0.0'
+          - 7.0.0
+          - 7.1.0
+          - 8.0.0
         include:
           - ruby: 3.1.6
-            rails: '~> 7.0.0'
+            rails: 7.0.0
           - ruby: 3.1.6
-            rails: '~> 7.1.0'
-            
+            rails: 7.1.0
+
     name: Ruby ${{ matrix.ruby }} / ActiveRecord ${{ matrix.rails }}
     services:
       postgres_primary:
@@ -178,3 +178,41 @@ jobs:
           PG_REPLICA_PORT: 5433
 
         run: bundle exec rspec --format progress
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.RUN_UNIQUE_ID }}_artifact_${{ matrix.ruby }}_${{ matrix.rails }}
+          path: coverage/
+          include-hidden-files: true
+          if-no-files-found: error
+
+  coverage_report:
+    needs: [rspec]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3.5
+
+      - name: Install Dependencies
+        run: |
+          gem install bundler
+          bundle install
+
+      - name: Download Partial Coverage Resultsets
+        uses: actions/download-artifact@v4
+        with:
+          path: coverage/
+
+      - name: Collate Partial Coverage Resultsets
+        run: bundle exec rake coverage:report
+
+      - uses: joshmfrankel/simplecov-check-action@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
