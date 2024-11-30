@@ -29,27 +29,6 @@ jobs:
       id: calculate_replica_sha
       run: echo "REPLICA_SHA=$(sha256sum postgres_replica.dockerfile | awk '{ print substr($1, 1, 12) }')" >> $GITHUB_OUTPUT
 
-  prebuild_primary:
-    needs: export_variables
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v2
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Build and tag primary Docker image
-      run: docker build -f postgres_primary.dockerfile -t ${{ needs.export_variables.outputs.primary_image }} .
-
-    - name: Push primary Docker image
-      run: docker push ${{ needs.export_variables.outputs.primary_image }}
-
   prebuild_replica:
     needs: export_variables
     runs-on: ubuntu-latest
@@ -91,7 +70,7 @@ jobs:
         run: bundle exec rubocop
 
   rspec:
-    needs: [export_variables, prebuild_primary, prebuild_replica]
+    needs: [export_variables, prebuild_replica]
     runs-on: ubuntu-latest
 
     strategy:
