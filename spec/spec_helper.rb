@@ -14,7 +14,7 @@ SimpleCov.start do
     [/postgresql/, /postgre_sql/].any? { |pattern| pattern.match?(src_file.filename) }
   end
 
-  sanitize      = ->(filename) { filename.tr(".", "-").tr("~>", "").strip }
+  sanitize      = ->(filename) { filename.tr(".", "_").tr("~>", "").strip }
   ruby_version  = sanitize.call(ENV.fetch("RUBY_VERSION", ""))
   ar_version    = sanitize.call(ENV.fetch("RAILS_VERSION", ""))
   coverage_path = [
@@ -25,6 +25,7 @@ SimpleCov.start do
   ].reject(&:blank?).join("-")
 
   coverage_dir "coverage/#{coverage_path}"
+  command_name "Ruby-#{ruby_version}-AR-#{ar_version}"
 end
 require "active_record_proxy_adapters"
 require "active_record_proxy_adapters/connection_handling"
