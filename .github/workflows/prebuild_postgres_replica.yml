@@ -1,0 +1,46 @@
+name: Build Postgres Replica Image
+
+on:
+  pull_request:
+    paths:
+      - 'postgres_replica.dockerfile'
+
+jobs:
+  export_variables:
+    runs-on: ubuntu-latest
+
+    outputs:
+      replica_image: ${{ steps.compute_container_registry_name.outputs.CR_NAME }}/postgres_replica:${{ steps.calculate_replica_sha.outputs.REPLICA_SHA }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Compute container registry name
+      id: compute_container_registry_name
+      run: echo "CR_NAME=$(echo ghcr.io/${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+    - name: Calculate SHA256 for postgres_replica.dockerfile
+      id: calculate_replica_sha
+      run: echo "REPLICA_SHA=$(sha256sum postgres_replica.dockerfile | awk '{ print substr($1, 1, 12) }')" >> $GITHUB_OUTPUT
+
+  prebuild_replica:
+    needs: export_variables
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and tag replica Docker image
+      run: docker build -f postgres_replica.dockerfile -t ${{ needs.export_variables.outputs.replica_image }} .
+
+    - name: Push replica Docker image
+      run: docker push ${{ needs.export_variables.outputs.replica_image }}
