@@ -15,8 +15,8 @@ services:
   app:
     build:
       args:
-        - RUBY_VERSION=${RUBY_VERSION:-3.2.3}
-        - RAILS_VERSION=${RAILS_VERSION:-~> 6.1.0}
+        - RUBY_VERSION=${RUBY_VERSION:-3.3.6}
+        - RAILS_VERSION=${RAILS_VERSION:-8.0.0}
     container_name: app
     image: active_record_proxy_adapters-app:${ENV_TAG:-latest}
     tty: true
