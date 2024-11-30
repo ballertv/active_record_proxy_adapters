@@ -1,5 +1,31 @@
 # frozen_string_literal: true
 
+require "simplecov"
+require "simplecov_json_formatter"
+require "active_support/core_ext/object/blank"
+
+simple_cov_formatters = [SimpleCov::Formatter::JSONFormatter]
+simple_cov_formatters << SimpleCov::Formatter::HTMLFormatter unless ENV["CI"]
+
+SimpleCov.start do
+  self.formatters = simple_cov_formatters
+  add_filter "/spec/"
+  add_group "PostgreSQL" do |src_file|
+    [/postgresql/, /postgre_sql/].any? { |pattern| pattern.match?(src_file.filename) }
+  end
+
+  sanitize      = ->(filename) { filename.tr(".", "-").tr("~>", "").strip }
+  ruby_version  = sanitize.call(ENV.fetch("RUBY_VERSION", ""))
+  ar_version    = sanitize.call(ENV.fetch("RAILS_VERSION", ""))
+  coverage_path = [
+    "ruby",
+    ruby_version,
+    "ar",
+    ar_version
+  ].reject(&:blank?).join("-")
+
+  coverage_dir "coverage/#{coverage_path}"
+end
 require "active_record_proxy_adapters"
 require "active_record_proxy_adapters/connection_handling"
 
