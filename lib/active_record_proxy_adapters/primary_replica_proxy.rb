@@ -62,11 +62,15 @@ module ActiveRecordProxyAdapters
 
     attr_reader :primary_connection, :last_write_at, :active_record_context
 
-    delegate :connected_to_stack, to: :connection_class
+    delegate :connection_handler, :connected_to_stack, to: :connection_class
     delegate :reading_role, :writing_role, to: :active_record_context
 
+    def replica_pool_unavailable?
+      !replica_pool
+    end
+
     def replica_pool
-      connection_class.connected_to(role: reading_role) { connection_class.connection_pool }
+      connection_handler.retrieve_connection_pool(connection_class.name, role: reading_role)
     end
 
     def connection_class
@@ -107,21 +111,12 @@ module ActiveRecordProxyAdapters
       [reading_role, writing_role].include?(role) ? role : nil
     end
 
-    def connection_for(role, sql_string) # rubocop:disable Metrics/MethodLength
-      connection = if role == writing_role
-                     primary_connection
-                   else
-                     begin
-                       replica_pool.checkout(checkout_timeout)
-                     # rescue NoDatabaseError to avoid crashing when running db:create rake task
-                     # rescue ConnectionNotEstablished to handle connectivity issues in the replica
-                     # (for example, replication delay)
-                     rescue ActiveRecord::NoDatabaseError, ActiveRecord::ConnectionNotEstablished
-                       primary_connection
-                     end
-                   end
+    def connection_for(role, sql_string)
+      connection = primary_connection if role == writing_role || replica_pool_unavailable?
+      connection ||= checkout_replica_connection
 
       result = yield(connection)
+
       update_primary_latest_write_timestamp if !replica_connection?(connection) && write_statement?(sql_string)
 
       result
@@ -130,7 +125,16 @@ module ActiveRecordProxyAdapters
     end
 
     def replica_connection?(connection)
-      connection != primary_connection
+      connection && connection != primary_connection
+    end
+
+    def checkout_replica_connection
+      replica_pool.checkout(checkout_timeout)
+    # rescue NoDatabaseError to avoid crashing when running db:create rake task
+    # rescue ConnectionNotEstablished to handle connectivity issues in the replica
+    # (for example, replication delay)
+    rescue ActiveRecord::NoDatabaseError, ActiveRecord::ConnectionNotEstablished
+      primary_connection
     end
 
     # @return [TrueClass] if there has been a write within the last {#proxy_delay} seconds
