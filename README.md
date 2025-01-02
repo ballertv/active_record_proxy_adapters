@@ -209,7 +209,7 @@ end
 # app/jobs/say_hello_job.rb
 class SayHelloJob < ApplicationJob
   def perform(user_id)
-    # so we manually reroute it to the replica
+    # so we manually reroute it to the primary
     user = ApplicationRecord.connected_to(role: :writing) { User.find(user_id) }
 
     UserMailer.welcome(user).deliver_now
