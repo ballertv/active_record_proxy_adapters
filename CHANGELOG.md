@@ -1,6 +1,8 @@
 ## [Unreleased]
 
-- Fix replica connection pool getter when specific connection name is not found
+## [0.2.1] - 2025-01-02
+
+- Fix replica connection pool getter when specific connection name is not found (847e150dd21c5bc619745ee1d9d8fcaa9b8f2eea)
 
 ## [0.2.0] - 2024-12-24
 
