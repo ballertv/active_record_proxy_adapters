@@ -1,7 +1,9 @@
 ## [Unreleased]
 
-- Handle PendingMigrationConnection introduced by Rails 7.2 and backported to Rails 7.1
-- Stick to same connection throughout request span
+## [0.2.2, 0.1.5] - 2025-01-02
+
+- Handle PendingMigrationConnection introduced by Rails 7.2 and backported to Rails 7.1 https://github.com/Nasdaq/active_record_proxy_adapters/commit/793562694c05d554bad6e14637b34e5f9ffd2fc5
+- Stick to same connection throughout request span https://github.com/Nasdaq/active_record_proxy_adapters/commit/789742fd7a33ecd555a995e8a1e1336455caec75
 
 ## [0.2.1] - 2025-01-02
 
