@@ -173,6 +173,7 @@ jobs:
   coverage_report:
     needs: [rspec]
     runs-on: ubuntu-latest
+    permissions: write-all
 
     steps:
       - name: Checkout Repository
