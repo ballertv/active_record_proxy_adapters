@@ -29,10 +29,10 @@ RSpec.shared_examples_for "a database task" do
     proc { temp_file.read == schema }
   end
 
-  def with_master_connection(&)
+  def with_master_connection(&block)
     pool = ActiveRecord::Base.connection_handler.establish_connection(public_schema_config,
                                                                       role: :admin)
-    pool.with_connection(&)
+    pool.with_connection(&block)
   ensure
     pool.disconnect
   end

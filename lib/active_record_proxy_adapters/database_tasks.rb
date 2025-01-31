@@ -27,8 +27,8 @@ module ActiveRecordProxyAdapters
 
       private
 
-      def sticking_to_primary(&)
-        ActiveRecord::Base.connected_to(role: context.writing_role, &)
+      def sticking_to_primary(&block)
+        ActiveRecord::Base.connected_to(role: context.writing_role, &block)
       end
 
       def context
