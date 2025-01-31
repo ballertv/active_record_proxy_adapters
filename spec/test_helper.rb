@@ -140,7 +140,7 @@ module TestHelper # rubocop:disable Metrics/ModuleLength
     if ActiveRecord.version < Gem::Version.new("7.1")
       options.merge!(include_replicas: include_hidden)
     else
-      options.merge!(include_hidden:)
+      options.merge!(include_hidden: include_hidden)
     end
 
     configurations.configs_for(**options)
