@@ -170,12 +170,27 @@ module ActiveRecordProxyAdapters
     # @return [TrueClass] if sql_string matches a write statement (i.e. INSERT, UPDATE, DELETE, SELECT FOR UPDATE)
     # @return [FalseClass] if sql_string matches a read statement (i.e. SELECT)
     def need_primary?(sql_string)
-      return true if recent_write_to_primary?
-
-      return true  if in_transaction?
-      return true  if SQL_PRIMARY_MATCHERS.any?(&match_sql?(sql_string))
-      return false if SQL_REPLICA_MATCHERS.any?(&match_sql?(sql_string))
-
+      if recent_write_to_primary?
+        puts "[DEBUG] Routing to primary: recent write detected"
+        return true
+      end
+    
+      if in_transaction?
+        puts "[DEBUG] Routing to primary: in transaction"
+        return true
+      end
+    
+      if SQL_PRIMARY_MATCHERS.any?(&match_sql?(sql_string))
+        puts "[DEBUG] Routing to primary: matches primary SQL patterns"
+        return true
+      end
+    
+      if SQL_REPLICA_MATCHERS.any?(&match_sql?(sql_string))
+        puts "[DEBUG] Routing to replica: matches replica SQL patterns"
+        return false
+      end
+    
+      puts "[DEBUG] Routing to primary: default case"
       true
     end
 
