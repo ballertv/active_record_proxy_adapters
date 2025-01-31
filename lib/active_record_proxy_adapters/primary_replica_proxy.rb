@@ -71,7 +71,9 @@ module ActiveRecordProxyAdapters
 
     def replica_pool
       # use default handler if the connection pool for specific class is not found
-      specific_replica_pool || default_replica_pool
+      pool = specific_replica_pool || default_replica_pool
+      puts "[DEBUG] Replica pool available: #{!pool.nil?}"
+      pool
     end
 
     def specific_replica_pool
@@ -121,12 +123,15 @@ module ActiveRecordProxyAdapters
     end
 
     def connected_to_stack
-      return connection_class.connected_to_stack if connection_class.respond_to?(:connected_to_stack)
-
-      # handle Rails 7.2+ pending migrations Connection
-      return [{ role: writing_role }] if pending_migration_connection?
-
-      []
+      stack = if connection_class.respond_to?(:connected_to_stack)
+                connection_class.connected_to_stack
+              elsif pending_migration_connection?
+                [{ role: writing_role }]
+              else
+                []
+              end
+      puts "[DEBUG] Connected to stack: #{stack.inspect}"
+      stack
     end
 
     def pending_migration_connection?
@@ -216,11 +221,14 @@ module ActiveRecordProxyAdapters
     end
 
     def in_transaction?
-      primary_connection.open_transactions.positive?
+      result = primary_connection.open_transactions.positive?
+      puts "[DEBUG] Open transactions: #{result}"
+      result
     end
 
     def update_primary_latest_write_timestamp
       @last_write_at = Concurrent.monotonic_time
+      puts "[DEBUG] Updated last_write_at: #{last_write_at}"
     end
 
     def proxy_delay
