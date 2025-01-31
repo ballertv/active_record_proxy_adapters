@@ -2,12 +2,9 @@
 
 source "https://rubygems.org"
 
-gem "mysql2", "~> 0.5"
 gem "pg", "~> 1.5"
 
 gem "rake", "~> 13.0"
-
-gem "concurrent-ruby", "1.3.4" # TODO: delete this line once Rails 7.0 is no longer supported
 
 group :test do
   gem "rspec", "~> 3.0"

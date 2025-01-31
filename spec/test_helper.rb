@@ -13,14 +13,6 @@ module TestHelper # rubocop:disable Metrics/ModuleLength
     self.abstract_class = true
   end
 
-  class Mysql2Record < ActiveRecord::Base
-    self.abstract_class = true
-  end
-
-  class Mysql2DatabaseTaskRecord < ActiveRecord::Base
-    self.abstract_class = true
-  end
-
   def env_name
     ENV["RAILS_ENV"] || "test"
   end
@@ -31,8 +23,6 @@ module TestHelper # rubocop:disable Metrics/ModuleLength
     active_record_context.reading_role = :reading
 
     load_configurations
-
-    nil
   end
 
   def reading_role
@@ -43,93 +33,50 @@ module TestHelper # rubocop:disable Metrics/ModuleLength
     active_record_context.writing_role
   end
 
-  def postgresql_primary_pool
+  def primary_pool
     ActiveRecord::Base
       .connection_handler
       .retrieve_connection_pool(PostgreSQLRecord.name, role: writing_role)
   end
 
-  def postgresql_replica_pool
+  def replica_pool
     ActiveRecord::Base
       .connection_handler
       .retrieve_connection_pool(PostgreSQLRecord.name, role: reading_role)
   end
 
-  def mysql2_primary_pool
-    ActiveRecord::Base
-      .connection_handler
-      .retrieve_connection_pool(Mysql2Record.name, role: writing_role)
-  end
-
-  def mysql2_replica_pool
-    ActiveRecord::Base
-      .connection_handler
-      .retrieve_connection_pool(Mysql2Record.name, role: reading_role)
-  end
-
   def reset_database
-    drop_postgresql_database
-    create_postgresql_database
-    drop_mysql2_database
-    create_mysql2_database
+    drop_database
+    create_database
   end
 
-  def drop_postgresql_database
-    ActiveRecord::Tasks::DatabaseTasks.drop(postgresql_primary_configuration)
+  def drop_database
+    ActiveRecord::Tasks::DatabaseTasks.drop(primary_configuration)
   end
 
-  def create_postgresql_database
-    ActiveRecord::Tasks::DatabaseTasks.create(postgresql_primary_configuration)
+  def create_database
+    ActiveRecord::Tasks::DatabaseTasks.create(primary_configuration)
   end
 
-  def drop_mysql2_database
-    ActiveRecord::Tasks::DatabaseTasks.drop(mysql2_primary_configuration)
+  def load_schema(structure_path = "db/postgresql_structure.sql")
+    ActiveRecord::Tasks::DatabaseTasks.structure_load(primary_configuration, structure_path)
   end
 
-  def create_mysql2_database
-    ActiveRecord::Tasks::DatabaseTasks.create(mysql2_primary_configuration)
+  def dump_schema(structure_path = "db/postgresql_structure.sql")
+    ActiveRecord::Base.establish_connection(primary_configuration)
+    ActiveRecord::Tasks::DatabaseTasks.structure_dump(primary_configuration, structure_path)
   end
 
-  def load_postgresql_schema(structure_path = "db/postgresql_structure.sql")
-    ActiveRecord::Tasks::DatabaseTasks.structure_load(postgresql_primary_configuration, structure_path)
-  end
-
-  def dump_postgresql_schema(structure_path = "db/postgresql_structure.sql")
-    ActiveRecord::Base.establish_connection(postgresql_primary_configuration)
-    ActiveRecord::Tasks::DatabaseTasks.structure_dump(postgresql_primary_configuration, structure_path)
-  end
-
-  def load_mysql2_schema(structure_path = "db/mysql_structure.sql")
-    ActiveRecord::Tasks::DatabaseTasks.structure_load(mysql2_primary_configuration, structure_path)
-  end
-
-  def dump_mysql2_schema(structure_path = "db/mysql_structure.sql")
-    ActiveRecord::Base.establish_connection(mysql2_primary_configuration)
-    ActiveRecord::Tasks::DatabaseTasks.structure_dump(mysql2_primary_configuration, structure_path)
-  end
-
-  def postgresql_primary_configuration
+  def primary_configuration
     configuration_for(name: "postgresql_primary")
   end
 
-  def postgresql_replica_configuration
+  def replica_configuration
     configuration_for(name: "postgresql_replica", include_hidden: true)
   end
 
   def postgresql_database_tasks_configuration
     configuration_for(name: "postgresql_database_tasks")
-  end
-
-  def mysql2_primary_configuration
-    configuration_for(name: "mysql2_primary")
-  end
-
-  def mysql2_replica_configuration
-    configuration_for(name: "mysql2_replica", include_hidden: true)
-  end
-
-  def mysql2_database_tasks_configuration
-    configuration_for(name: "mysql2_database_tasks")
   end
 
   def configuration_for(name:, include_hidden: false)
@@ -150,9 +97,6 @@ module TestHelper # rubocop:disable Metrics/ModuleLength
     ActiveRecord::Base.configurations = database_config
     PostgreSQLRecord.connects_to(database: { writing_role => :postgresql_primary, reading_role => :postgresql_replica })
     PostgreSQLDatabaseTaskRecord.connects_to(database: { writing_role => :postgresql_database_tasks })
-
-    Mysql2Record.connects_to(database: { writing_role => :mysql2_primary, reading_role => :mysql2_replica })
-    Mysql2DatabaseTaskRecord.connects_to(database: { writing_role => :mysql2_database_tasks })
   end
 
   def database_config
@@ -162,19 +106,11 @@ module TestHelper # rubocop:disable Metrics/ModuleLength
     YAML.safe_load(erb.result, aliases: true)
   end
 
-  def truncate_postgresql_database
-    truncate_database(postgresql_primary_pool, suffix: "RESTART IDENTITY CASCADE")
-  end
-
-  def truncate_mysql2_database
-    truncate_database(mysql2_primary_pool)
-  end
-
-  def truncate_database(pool, suffix: "")
-    pool.with_connection do |connection|
+  def truncate_database
+    primary_pool.with_connection do |connection|
       connection.tables.each do |table|
         connection.execute_unproxied <<~SQL.squish
-          TRUNCATE TABLE #{table} #{suffix};
+          TRUNCATE TABLE #{table} RESTART IDENTITY CASCADE;
         SQL
       end
     end

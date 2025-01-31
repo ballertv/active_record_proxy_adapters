@@ -3,7 +3,6 @@
 require "simplecov"
 require "simplecov_json_formatter"
 require "active_support/core_ext/object/blank"
-require "simple_cov_groups"
 
 simple_cov_formatters = [SimpleCov::Formatter::JSONFormatter]
 simple_cov_formatters << SimpleCov::Formatter::HTMLFormatter unless ENV["CI"]
@@ -11,7 +10,9 @@ simple_cov_formatters << SimpleCov::Formatter::HTMLFormatter unless ENV["CI"]
 SimpleCov.start do
   self.formatters = simple_cov_formatters
   add_filter "/spec/"
-  SIMPLE_COV_GROUPS.call
+  add_group "PostgreSQL" do |src_file|
+    [/postgresql/, /postgre_sql/].any? { |pattern| pattern.match?(src_file.filename) }
+  end
 
   sanitize      = ->(filename) { filename.tr(".", "_").tr("~>", "").strip }
   ruby_version  = sanitize.call(ENV.fetch("RUBY_VERSION", ""))
